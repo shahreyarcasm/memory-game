@@ -11,6 +11,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const darkMode = useAppStore((s) => s.darkMode);
   const toggleDarkMode = useAppStore((s) => s.toggleDarkMode);
+  const isGamePage = location.pathname.startsWith('/game/');
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -19,13 +20,13 @@ export default function Layout({ children }: LayoutProps) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 dark:from-primary-400 dark:to-accent-400 bg-clip-text text-transparent">
+              <span className="text-base sm:text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 dark:from-primary-400 dark:to-accent-400 bg-clip-text text-transparent">
                 CognitivePulse
               </span>
             </Link>
@@ -51,22 +52,21 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className={`flex-1 max-w-6xl w-full mx-auto ${isGamePage ? '' : 'px-4 sm:px-6 lg:px-8'} py-4 sm:py-6`}>
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50">
-        <div className="flex items-center justify-around h-16">
-          <MobileNavLink to="/" active={isActive('/')} icon={<Home className="w-5 h-5" />} label="Home" />
-          <MobileNavLink to="/games" active={isActive('/games')} icon={<Grid3X3 className="w-5 h-5" />} label="Games" />
-          <MobileNavLink to="/stats" active={isActive('/stats')} icon={<BarChart3 className="w-5 h-5" />} label="Progress" />
-          <MobileNavLink to="/profile" active={isActive('/profile')} icon={<User className="w-5 h-5" />} label="Profile" />
-        </div>
-      </nav>
-
-      {/* Bottom padding for mobile nav */}
-      <div className="h-16 md:h-0" />
+      {/* Mobile Bottom Navigation — hidden during gameplay */}
+      {!isGamePage && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50 pb-safe">
+          <div className="flex items-center justify-around h-14 sm:h-16">
+            <MobileNavLink to="/" active={isActive('/')} icon={<Home className="w-5 h-5" />} label="Home" />
+            <MobileNavLink to="/games" active={isActive('/games')} icon={<Grid3X3 className="w-5 h-5" />} label="Games" />
+            <MobileNavLink to="/stats" active={isActive('/stats')} icon={<BarChart3 className="w-5 h-5" />} label="Progress" />
+            <MobileNavLink to="/profile" active={isActive('/profile')} icon={<User className="w-5 h-5" />} label="Profile" />
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
@@ -91,7 +91,7 @@ function MobileNavLink({ to, active, icon, label }: { to: string; active: boolea
   return (
     <Link
       to={to}
-      className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+      className={`flex flex-col items-center gap-0.5 p-2 rounded-lg transition-colors min-w-12 ${
         active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'
       }`}
     >

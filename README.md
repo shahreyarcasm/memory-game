@@ -4,7 +4,7 @@ A free, science-based memory improvement web application built with React, TypeS
 
 ## Features
 
-- **6 Cognitive Games**: Digit Span, Spatial Matrix, Card Pairs, Stroop Challenge, Object Grid, and Rapid Flash
+- **15 Cognitive Games** across 4 categories: Working Memory, Attention, Spatial & Visual, and Reactions
 - **Local Progress Tracking**: Store your stats offline without an account
 - **Adaptive Difficulty**: Games adjust to your skill level
 - **Dark Mode**: Easy on the eyes for extended play sessions
@@ -62,8 +62,19 @@ The project is configured for immediate development. All games are fully functio
 
 1. Local storage persistence for guest users
 2. Score tracking and accuracy calculation
-3. Adaptive difficulty scaling
-4. Session history recording
+3. Adaptive difficulty scaling via `usePredictedDifficulty` hook
+4. Session history recording and mastery tracking
+5. Sound feedback system (default on, toggleable)
+6. Tier-based game-over screens with encouragement messages
+
+### Game Categories
+
+| Category | Games |
+|----------|-------|
+| **Working Memory** | Digit Span, Spatial Matrix, Mental Math |
+| **Attention** | Stroop Challenge, Sustained Vigilance, Visual Search |
+| **Spatial & Visual** | Card Pairs, Pattern Builder, Object Grid |
+| **Reactions** | Rapid Flash, Arrow Rush, Clock Face, Chain Reaction, Word Pairs, Sequence Builder |
 
 To add a new game:
 

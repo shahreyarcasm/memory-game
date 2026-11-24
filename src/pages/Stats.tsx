@@ -1,12 +1,37 @@
 import { useMemo } from 'react';
 import { GAMES } from '../data/games';
 import { useAppStore } from '../store/app';
-import { ArrowLeft, Award, Target, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Award, Target, TrendingUp, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+/** Derive a single player-level number (1–10) from aggregate skill data.
+ *
+ * High standards: mastery dominates the calculation.
+ * - Each ~10% mastery bump = +1 level (skill is the main driver)
+ * - Sessions contribute minimally: 50+ sessions = +1, 100+ = +2
+ * - This means even marathon players stay at lower levels without strong accuracy
+ */
+function computeGlobalLevel(totalPlays: number, avgMastery: number): number {
+  const masteryLevel = Math.floor(avgMastery / 10);              // 0–10 from mastery alone
+  const playBonus    = totalPlays >= 100 ? 2 : totalPlays >= 50 ? 1 : 0; // max +2 extra
+  return Math.min(10, Math.max(1, masteryLevel + playBonus));
+}
+
+function getLevelStyle(level: number) {
+  if (level <= 2) return { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-300', label: 'Novice' };
+  if (level <= 4) return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', label: 'Explorer' };
+  if (level <= 6) return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-300', label: 'Skilled' };
+  if (level <= 8) return { bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-700 dark:text-violet-300', label: 'Master' };
+  return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-300', label: 'Elite' }; // Level 9–10
+}
 
 export default function Stats() {
   const userStats = useAppStore((s) => s.userStats);
   const sessionHistory = useAppStore((s) => s.sessionHistory);
+  const globalSkillScore = useAppStore((s) => s.globalSkillScore);
+
+  const globalLevel = useMemo(() => computeGlobalLevel(globalSkillScore.totalPlayCount, globalSkillScore.averageMasteryAcrossGames), [globalSkillScore]);
+  const levelStyle = getLevelStyle(globalLevel);
 
   const overview = useMemo(() => {
     const entries = Object.entries(userStats);
@@ -35,6 +60,30 @@ export default function Stats() {
           Track your cognitive improvement over time
         </p>
       </div>
+
+      {/* Global Player Level */}
+      {globalSkillScore.totalPlayCount > 0 && (
+        <div className={`rounded-2xl border-2 p-5 flex items-center gap-4 ${levelStyle.bg}`}>
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <Crown className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global Player Level</p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className={`text-3xl font-black ${levelStyle.text}`}>Level {globalLevel}</span>
+              <span className={`text-sm font-medium ${levelStyle.text} opacity-80`}>{levelStyle.label}</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {globalSkillScore.totalPlayCount} sessions · {Math.round(globalSkillScore.averageMasteryAcrossGames)}% avg mastery
+            </p>
+          </div>
+          <div className="hidden sm:flex flex-col gap-1 items-end">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full ${i < globalLevel ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -77,17 +126,23 @@ export default function Stats() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {GAMES.map(game => {
                 const stats = userStats[game.id];
-                if (!stats) return null;
                 return (
                   <tr key={game.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
-                    <td className="px-6 py-4 font-medium">{game.title}</td>
-                    <td className="px-6 py-4 text-right">{stats.highScore}</td>
-                    <td className="px-6 py-4 text-right">{Math.round(stats.bestAccuracy)}%</td>
-                    <td className="px-6 py-4 text-right">{stats.totalPlays}</td>
+                    <td className="px-6 py-4 font-medium flex items-center gap-3">
+                      <span className="text-xl">{game.icon}</span>
+                      <span>{game.title}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">{stats?.highScore ?? 0}</td>
+                    <td className="px-6 py-4 text-right">{stats ? `${Math.round(stats.bestAccuracy)}%` : '—'}</td>
+                    <td className="px-6 py-4 text-right">{stats?.totalPlays ?? 0}</td>
                     <td className="px-6 py-4 text-right">
-                      <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
-                        L{Math.round(stats.averageDifficulty)}
-                      </span>
+                      {stats ? (
+                        <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
+                          L{Math.round(stats.averageDifficulty)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-500 text-sm">Not played</span>
+                      )}
                     </td>
                   </tr>
                 );
